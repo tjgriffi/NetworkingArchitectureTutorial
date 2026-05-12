@@ -23,8 +23,9 @@ jobs:
           restore-keys: |
             $-spm-
 
-      - name: Select Xcode
-        run: sudo xcode-select -switch /Applications/Xcode.app
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
       - name: Build
         run: |

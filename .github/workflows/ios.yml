@@ -28,10 +28,9 @@ jobs:
           xcode-version: latest-stable
 
       - name: Build
-        run: |
-          xcodebuild clean build
+        run: xcodebuild clean build
           -project NetworkingTutorial/NetworkingTutorial.xcodeproj
-          -scheme NetworkingTutorial/NetworkingTutorial
+          -scheme NetworkingTutorial
           -sdk iphonesimulator
           -destination 'platform=iOS Simulator,name=iPhone 17 pro'
       

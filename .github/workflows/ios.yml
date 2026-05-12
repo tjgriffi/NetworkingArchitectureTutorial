@@ -27,10 +27,10 @@ jobs:
         run: sudo xcode-select -switch /Applications/Xcode.app
 
       - name: Build
-        run: xcodebuild clean build -project NetworkingTutorial/NetworkingTutorial.xcodeproj -scheme NetworkingTutorial -destination 'platform=iOS Simulator,name=iPhone 12'
+        run: xcodebuild clean build -project NetworkingTutorial/NetworkingTutorial.xcodeproj -scheme NetworkingTutorial -destination 'platform=iOS Simulator,name:Any iOS Simulator Device'
       
       - name: Run tests
-        run: xcodebuild test -project NetworkingTutorial/NetworkingTutorial.xcodeproj -scheme NetworkingTutorial -destination 'platform=iOS Simulator,name=iPhone 12'
+        run: xcodebuild test -project NetworkingTutorial/NetworkingTutorial.xcodeproj -scheme NetworkingTutorial -destination 'platform=iOS Simulator,name:Any iOS Simulator Device'
       
       - name: Upload test results
         uses: actions/upload-artifact@v4

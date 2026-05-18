@@ -13,16 +13,23 @@ struct ProductStoreTests {
     class MockNetworkClient: NetworkClientProtocol {
         
         var result: Result<Any, Error>
-        
-        var lastURL: String?
-        
-        init(result: Result<Any, Error> = .success([])) {
-            self.result = result
+        private var continuation: CheckedContinuation<Void, Never>?
+        private var isSuspensionNeeded: Bool
+                
+        init(result: Result<Any, Error> = .success([]),
+            isSuspensionNeeded: Bool = false) {
+                self.result = result
+                self.isSuspensionNeeded = isSuspensionNeeded
         }
         
         func fetch<T>(_ urlString: String) async throws -> T where T : Decodable {
-            
-            lastURL = urlString
+            print("loading_state: inside of fetch for mock repo")
+            if isSuspensionNeeded {
+                print("loading_state: isSuspensionNeeded")
+                await withCheckedContinuation {[weak self] continuation in
+                    self?.continuation = continuation
+                }
+            }
             
             switch result {
             case .success(let success):
@@ -34,6 +41,11 @@ struct ProductStoreTests {
             case .failure(let failure):
                 throw failure
             }
+        }
+        
+        func complete() {
+            print("loading_state: resumed completion")
+            continuation?.resume()
         }
     }
 
@@ -65,7 +77,7 @@ struct ProductStoreTests {
     @Test func fetch_product_from_backend_badStatusCode_failure() async {
         
         // Given
-        let mockResults = RepositoryError.badStatusCode
+        let mockResults = RepositoryError.badStatusCode(statusCode: 401, message: "does not exist")
         
         let mockRepo = MockNetworkClient(result: .failure(mockResults))
         let productStore = ProductStore(repository: mockRepo)
@@ -74,7 +86,7 @@ struct ProductStoreTests {
         await productStore.fetchProducts()
         
         // Then
-        #expect(productStore.state == .error(mockResults.rawValue))
+        #expect(productStore.state == .error(mockResults.description))
         #expect(productStore.products.isEmpty)
     }
     
@@ -90,7 +102,7 @@ struct ProductStoreTests {
         await productStore.fetchProducts()
         
         // Then
-        #expect(productStore.state == .error(mockResults.rawValue))
+        #expect(productStore.state == .error(mockResults.description))
         #expect(productStore.products.isEmpty)
     }
     
@@ -106,7 +118,7 @@ struct ProductStoreTests {
         await productStore.fetchProducts()
         
         // Then
-        #expect(productStore.state == .error(mockResults.rawValue))
+        #expect(productStore.state == .error(mockResults.description))
         #expect(productStore.products.isEmpty)
     }
     
@@ -122,8 +134,33 @@ struct ProductStoreTests {
         await productStore.fetchProducts()
         
         // Then
-        #expect(productStore.state == .error(mockResults.rawValue))
+        #expect(productStore.state == .error(mockResults.description))
         #expect(productStore.products.isEmpty)
     }
+    
+//    @Test func fetch_product_from_backend_loading_state() async throws {
+//        
+//        // Given
+//        let mockResult = RepositoryError.badStatusCode(statusCode: 401, message: "does not exist")
+//        let mockRepo = MockNetworkClient(result: .failure(mockResult), isSuspensionNeeded: true)
+//        let productStore = ProductStore(repository: mockRepo)
+//        
+//        #expect(productStore.state == .initial)
+//        
+//        // When
+//        let task = Task {
+//            print("loading_state: Inside of Task")
+//            await productStore.fetchProducts()
+//        }
+//        print("loading_state: before Task.yield")
+//        await Task.yield()
+//        print("loading_state: after Task.yield")
+//        #expect(productStore.state == .loading)
+//        
+//        mockRepo.complete()
+//        await task.value
+//        
+//        #expect(productStore.state == .error(mockResult.description))
+//    }
 
 }

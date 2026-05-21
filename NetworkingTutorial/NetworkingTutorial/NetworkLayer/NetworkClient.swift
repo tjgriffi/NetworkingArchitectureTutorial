@@ -8,18 +8,22 @@
 import Foundation
 
 protocol NetworkClientProtocol {
-    func fetch<T: Decodable>(_ urlString: String) async throws -> T
+//    func fetch<T: Decodable>(_ request: URLRequest) async throws -> T
+    func fetch<E: Endpoint>(_ endpoint: E) async throws -> E.Response
 }
 
-class Repository: NetworkClientProtocol {
+struct NetworkClient: NetworkClientProtocol {
     
-    func fetch<T>(_ urlString: String) async throws -> T where T : Decodable {
-        let urlComponents = URLComponents(string: urlString)
-        guard let url = urlComponents?.url else {
-            throw RepositoryError.invalidURL
-        }
+    let baseURL: URL
+    
+    init(baseURL: URL = URL(string: NTConstants.baseURLString)!) {
+        self.baseURL = baseURL
+    }
+    
+    @concurrent
+    func fetch<E>(_ endpoint: E) async throws -> E.Response where E : Endpoint {
         
-        let request = URLRequest(url: url)
+        let request = try endpoint.makeRequest(baseURL: baseURL)
         
         guard let requestURL = request.url else {
             throw RepositoryError.invalidURL
@@ -43,19 +47,17 @@ class Repository: NetworkClientProtocol {
                 // 429 - rate limited
                 // 500...599 server errors
             }
-            
-            let decodedResponse = try JSONDecoder().decode(T.self, from: data)
-            
-            return decodedResponse
+                        
+            return try endpoint.map(data: data)
             
         } catch let error as URLError where error.code == .cancelled {
             throw RepositoryError.taskCancellation
         } catch is CancellationError {
             throw RepositoryError.taskCancellation
         } catch {
+            debugPrint(error)
             throw RepositoryError.networkError(error: error)
         }
-        
     }
 }
 

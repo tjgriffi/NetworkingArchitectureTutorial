@@ -9,8 +9,6 @@ import Foundation
 
 class NTConstants {
     
-    static var productURLString = "https://dummyjson.com/products"
-    static var categoryURLString = "https://dummyjson.com/products/category-list"
-    
-    
+    static var baseURLString = "https://dummyjson.com"
+//    static var categoryURLString = "https://dummyjson.com/products/category-list"
 }

@@ -21,15 +21,14 @@ enum ProductStoreError: LocalizedError {
 
 @Observable class ProductStore {
     
-    var products: [Product]
-    private let repository: NetworkClientProtocol
+    var products: [Product] = []
+    private let productService: ProductService
     var state: NetworkCallState = .initial
+    var errorMessage: String = ""
     
-    init(products: [Product] = [],
-         repository: NetworkClientProtocol = Repository()) {
+    init(productService: ProductService = DefaultProductService()) {
         
-        self.products = products
-        self.repository = repository
+        self.productService = productService
     }
     
     func fetchProducts() async {
@@ -42,17 +41,21 @@ enum ProductStoreError: LocalizedError {
         state = .loading
         
         do {
-            let productResponse: ProductResponse = try await repository.fetch(NTConstants.productURLString)
             
+            products = try await productService.fetch(skip: 0, limit: 0)
             state = .loaded
-            products = productResponse.products
         } catch let error as RepositoryError {
+            errorMessage = error.description
             state = .error(error.description)
         } catch {
+            errorMessage = error.localizedDescription
             state = .error(error.localizedDescription)
+            
         }
     }
 }
+
+
 
 //import Playgrounds
 //

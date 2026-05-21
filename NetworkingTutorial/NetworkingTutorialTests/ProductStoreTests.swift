@@ -23,9 +23,7 @@ struct ProductStoreTests {
         }
         
         func fetch<T>(_ urlString: String) async throws -> T where T : Decodable {
-            print("loading_state: inside of fetch for mock repo")
             if isSuspensionNeeded {
-                print("loading_state: isSuspensionNeeded")
                 await withCheckedContinuation {[weak self] continuation in
                     self?.continuation = continuation
                 }
@@ -44,25 +42,36 @@ struct ProductStoreTests {
         }
         
         func complete() {
-            print("loading_state: resumed completion")
             continuation?.resume()
+        }
+    }
+    
+    class MockProductServiceTest: ProductService {
+        
+        var result: Result<[Product], Error>
+        
+        init(result: Result<[Product], Error>) {
+            self.result = result
+        }
+        
+        func fetch(skip: Int, limit: Int) async throws -> [NetworkingTutorial.Product] {
+            switch result {
+            case .success(let success):
+                
+                return success
+            case .failure(let failure):
+                throw failure
+            }
         }
     }
 
     @Test func fetch_product_from_backend_success() async throws {
         
         // Given
-        let mockResults = ProductResponse(
-            products: [
-                Product.example
-            ],
-            total: 1,
-            skip: 11,
-            limit: 10
-        )
+        let mockResults = [Product.example]
         
-        let mockRepo = MockNetworkClient(result: .success(mockResults))
-        let productStore = ProductStore(repository: mockRepo)
+        let mockProductService = MockProductServiceTest(result: .success(mockResults))
+        let productStore = ProductStore(productService: mockProductService)
         
         #expect(productStore.products.count == 0, "There should not be any products initially") 
         
@@ -79,8 +88,8 @@ struct ProductStoreTests {
         // Given
         let mockResults = RepositoryError.badStatusCode(statusCode: 401, message: "does not exist")
         
-        let mockRepo = MockNetworkClient(result: .failure(mockResults))
-        let productStore = ProductStore(repository: mockRepo)
+        let mockProductService = MockProductServiceTest(result: .failure(mockResults))
+        let productStore = ProductStore(productService: mockProductService)
         
         // When
         await productStore.fetchProducts()
@@ -95,8 +104,8 @@ struct ProductStoreTests {
         // Given
         let mockResults = RepositoryError.decodingFailed
         
-        let mockRepo = MockNetworkClient(result: .failure(mockResults))
-        let productStore = ProductStore(repository: mockRepo)
+        let mockProductService = MockProductServiceTest(result: .failure(mockResults))
+        let productStore = ProductStore(productService: mockProductService)
         
         // When
         await productStore.fetchProducts()
@@ -111,8 +120,8 @@ struct ProductStoreTests {
         // Given
         let mockResults = RepositoryError.invalidHttpResponse
         
-        let mockRepo = MockNetworkClient(result: .failure(mockResults))
-        let productStore = ProductStore(repository: mockRepo)
+        let mockProductService = MockProductServiceTest(result: .failure(mockResults))
+        let productStore = ProductStore(productService: mockProductService)
         
         // When
         await productStore.fetchProducts()
@@ -127,8 +136,8 @@ struct ProductStoreTests {
         // Given
         let mockResults = RepositoryError.invalidURL
         
-        let mockRepo = MockNetworkClient(result: .failure(mockResults))
-        let productStore = ProductStore(repository: mockRepo)
+        let mockProductService = MockProductServiceTest(result: .failure(mockResults))
+        let productStore = ProductStore(productService: mockProductService)
         
         // When
         await productStore.fetchProducts()
@@ -142,9 +151,9 @@ struct ProductStoreTests {
 //        
 //        // Given
 //        let mockResult = RepositoryError.badStatusCode(statusCode: 401, message: "does not exist")
-//        let mockRepo = MockNetworkClient(result: .failure(mockResult), isSuspensionNeeded: true)
-//        let productStore = ProductStore(repository: mockRepo)
-//        
+//        let mockProductService = MockProductService(result:.failure(mockResult), isSuspensionNeeded: true)
+//        let productStore = ProductStore(productService: mockProductService)
+//
 //        #expect(productStore.state == .initial)
 //        
 //        // When

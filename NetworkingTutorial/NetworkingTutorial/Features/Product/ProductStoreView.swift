@@ -10,20 +10,26 @@ import SwiftUI
 struct ProductStoreView: View {
     @State private var searchText: String = ""
     @State var productStore: ProductStore
+    @State private var receivedProductStoreError: Bool = false
     
     var body: some View {
-        NavigationStack {
-            ProductStoreListView(productStore: $productStore)
-                .navigationTitle("Products")
-                .toolbar {
-                    NavigationLink {
-                        Text("Filtered Button view!!")
-                    } label: {
-                        Image(systemName: "line.horizontal.3")
+        ZStack {
+            NavigationStack {
+                ProductStoreListView(productStore: $productStore)
+                    .navigationTitle("Products")
+                    .toolbar {
+                        NavigationLink {
+                            Text("Filtered Button view!!")
+                        } label: {
+                            Image(systemName: "line.horizontal.3")
+                        }
                     }
-                }
+                    .task {
+                        await productStore.fetchProducts()
+                    }
+            }
+            .searchable(text: $searchText, prompt: "Search")
         }
-        .searchable(text: $searchText, prompt: "Search")
     }
 }
 
@@ -33,6 +39,12 @@ struct ProductStoreListView: View {
     var body: some View {
         List(productStore.products) { product in
             ProductRow(product: product)
+        }
+        .overlay {
+            if case .error(let message) = productStore.state {
+                Text(message)
+                    .foregroundStyle(.red)
+            }
         }
     }
 }
@@ -73,6 +85,18 @@ struct ProductRow: View {
     }
 }
 
-#Preview {
-    ProductStoreView(productStore: ProductStore(products: [Product.example]))
+#Preview("1 item") {
+//    @State @Previewable var productStore = ProductStore()
+//    ProductStoreView(productStore: productStore)
+    ProductStoreView(
+        productStore: ProductStore(
+            productService: MockProductService()))
+}
+
+#Preview("Error") {
+    ProductStoreView(
+        productStore: ProductStore(
+            productService: MockProductService(
+                error: RepositoryError.badStatusCode(
+                    statusCode: 404, message: "does not exist"))))
 }

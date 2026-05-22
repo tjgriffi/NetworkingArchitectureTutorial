@@ -27,6 +27,12 @@ struct ProductStoreView: View {
                     .task {
                         await productStore.fetchProducts()
                     }
+                    .onTriggerLoadAt(triggerDistance: 300) {
+                        Task {
+                            await productStore.fetchMore()
+                        }
+                    }
+
             }
             .searchable(text: $searchText, prompt: "Search")
         }
@@ -85,7 +91,30 @@ struct ProductRow: View {
     }
 }
 
-#Preview("1 item") {
+extension View {
+    
+    func onTriggerLoadAt(triggerDistance: CGFloat, of transform: @escaping () -> Void) -> some View {
+        
+        return self
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                // Check that this isn't the initial rendering of the list
+                guard geometry.contentSize.height > 0 else { return false }
+                
+                let maxOffset = geometry.contentSize.height - geometry.containerSize.height
+                
+                let currentOffset = geometry.contentOffset.y
+                                
+                return currentOffset >= maxOffset - triggerDistance
+            } action : { wasNearBottom, isNearBottom in
+                // Action only fires when bool changes
+                if isNearBottom && !wasNearBottom {
+                    transform()
+                }
+            }
+    }
+}
+
+#Preview("Items") {
 //    @State @Previewable var productStore = ProductStore()
 //    ProductStoreView(productStore: productStore)
     ProductStoreView(

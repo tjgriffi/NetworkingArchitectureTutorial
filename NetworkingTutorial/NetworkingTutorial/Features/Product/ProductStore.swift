@@ -24,7 +24,8 @@ enum ProductStoreError: LocalizedError {
     var products: [Product] = []
     private let productService: ProductService
     var state: NetworkCallState = .initial
-    var errorMessage: String = ""
+    private var skipOffset = 0
+    private let limit = 10
     
     init(productService: ProductService = DefaultProductService()) {
         
@@ -42,16 +43,43 @@ enum ProductStoreError: LocalizedError {
         
         do {
             
-            products = try await productService.fetch(skip: 0, limit: 0)
+            products = try await productService.fetch(skip: skipOffset, limit: limit)
+            incrementSkipOffset()
             state = .loaded
         } catch let error as RepositoryError {
-            errorMessage = error.description
             state = .error(error.description)
         } catch {
-            errorMessage = error.localizedDescription
             state = .error(error.localizedDescription)
             
         }
+    }
+    
+    // Fetch more product when we reach the bottom of the list
+    func fetchMore() async {
+        
+        guard state != .loading else {
+            return
+        }
+        
+        print("loadMore")
+        
+        state = .loading
+        
+        do {
+            let nextProducts = try await productService.fetch(skip: skipOffset, limit: limit)
+            products.append(contentsOf: nextProducts)
+            incrementSkipOffset()
+            state = .loaded
+        } catch let error as RepositoryError {
+            state = .error(error.description)
+        } catch {
+            state = .error(error.localizedDescription)
+            
+        }
+    }
+    
+    private func incrementSkipOffset() {
+        skipOffset += 10
     }
 }
 

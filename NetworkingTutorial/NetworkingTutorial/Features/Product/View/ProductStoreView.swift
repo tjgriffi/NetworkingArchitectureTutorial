@@ -25,7 +25,7 @@ struct ProductStoreView: View {
                         }
                     }
                     .task {
-                        await productStore.fetchProducts()
+                        await productStore.initialFetchProducts()
                     }
                     .onTriggerLoadAt(triggerDistance: 300) {
                         Task {
@@ -51,6 +51,11 @@ struct ProductStoreListView: View {
                 Text(message)
                     .foregroundStyle(.red)
             }
+            
+            if productStore.state == .loading {
+                ProgressView()
+                    .controlSize(.large)
+            }
         }
     }
 }
@@ -61,27 +66,35 @@ struct ProductRow: View {
     var body: some View {
         HStack {
             // Image
-            Rectangle()
-                .fill(.gray)
-                .frame(width: 50, height: 100)
-            VStack {
+            AsyncImage(url: URL(string: product.thumbnail)) { phase in
+                switch phase {
+                case .empty:
+                    Color.gray
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFit()
+                case .failure(let error):
+                    Color.gray
+                @unknown default:
+                    fatalError()
+                }
+            }
+            .frame(width: 100, height: 100)
+            VStack(alignment: .leading) {
                 // Title
                 Text(product.title)
                     .bold()
                 // Category
-                Text(product.category)
+                Text(product.category.capitalized)
                     .foregroundStyle(.gray)
                 HStack {
                     // price
-                    Text("$" + product.price.description)
+                    Text("$ \(product.price, specifier: "%.2f")")
                         .bold()
                     // discount
-                    HStack {
-                        Text(product.discountPercentage.description)
-                            .foregroundStyle(.mint)
-                        Text("% off")
-                            .foregroundStyle(.mint)
-                    }
+                    Text("\(product.discountPercentage, specifier: "%.2f")% off")
+                        .foregroundStyle(.mint)
                 }
                 
             }

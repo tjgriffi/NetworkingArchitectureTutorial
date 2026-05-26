@@ -101,4 +101,10 @@ struct ProductResponse: Decodable {
     let total: Int
     let skip: Int
     let limit: Int
+    
+    static let example = ProductResponse(
+        products: [Product.example],
+        total: 1,
+        skip: 0,
+        limit: 1)
 }

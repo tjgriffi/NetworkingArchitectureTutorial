@@ -12,6 +12,19 @@ enum NetworkCallState: Equatable {
     case loading
     case loaded
     case error(String)
+    
+    var canLoad: Bool {
+        switch self {
+        case .initial:
+            true
+        case .loading:
+            false
+        case .loaded:
+            true
+        case .error(let string):
+            true
+        }
+    }
 }
 
 enum ProductStoreError: LocalizedError {
@@ -21,20 +34,22 @@ enum ProductStoreError: LocalizedError {
 
 @Observable class ProductStore {
     
-    var products: [Product] = []
+    private(set) var products: [Product] = []
+    private(set) var state: NetworkCallState = .initial
+    
     private let productService: ProductService
-    var state: NetworkCallState = .initial
     private var skipOffset = 0
     private let limit = 10
+    private var total: Int = 0
     
     init(productService: ProductService = DefaultProductService()) {
         
         self.productService = productService
     }
     
-    func fetchProducts() async {
+    func initialFetchProducts() async {
         
-        guard state != .loading else {
+        guard state.canLoad && products.isEmpty else {
             // Too early to make a fetch
             return
         }
@@ -43,7 +58,10 @@ enum ProductStoreError: LocalizedError {
         
         do {
             
-            products = try await productService.fetch(skip: skipOffset, limit: limit)
+            let productResponse = try await productService.fetch(skip: skipOffset, limit: limit)
+            
+            products = productResponse.products
+            total = productResponse.total
             incrementSkipOffset()
             state = .loaded
         } catch let error as RepositoryError {
@@ -57,16 +75,16 @@ enum ProductStoreError: LocalizedError {
     // Fetch more product when we reach the bottom of the list
     func fetchMore() async {
         
-        guard state != .loading else {
+        guard state.canLoad && products.count < total else {
             return
         }
-        
-        print("loadMore")
         
         state = .loading
         
         do {
-            let nextProducts = try await productService.fetch(skip: skipOffset, limit: limit)
+            
+            let productResponse = try await productService.fetch(skip: skipOffset, limit: limit)
+            let nextProducts = productResponse.products
             products.append(contentsOf: nextProducts)
             incrementSkipOffset()
             state = .loaded

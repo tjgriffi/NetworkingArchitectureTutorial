@@ -76,7 +76,7 @@ struct ProductStoreTests {
         #expect(productStore.products.count == 0, "There should not be any products initially") 
         
         // When
-        await productStore.fetchProducts()
+        await productStore.initialFetchProducts()
         
         // Then
         #expect(productStore.products.count == 1, "There is an incorrect number of products that was added")
@@ -92,7 +92,7 @@ struct ProductStoreTests {
         let productStore = ProductStore(productService: mockProductService)
         
         // When
-        await productStore.fetchProducts()
+        await productStore.initialFetchProducts()
         
         // Then
         #expect(productStore.state == .error(mockResults.description))
@@ -108,7 +108,7 @@ struct ProductStoreTests {
         let productStore = ProductStore(productService: mockProductService)
         
         // When
-        await productStore.fetchProducts()
+        await productStore.initialFetchProducts()
         
         // Then
         #expect(productStore.state == .error(mockResults.description))
@@ -124,7 +124,7 @@ struct ProductStoreTests {
         let productStore = ProductStore(productService: mockProductService)
         
         // When
-        await productStore.fetchProducts()
+        await productStore.initialFetchProducts()
         
         // Then
         #expect(productStore.state == .error(mockResults.description))
@@ -140,7 +140,7 @@ struct ProductStoreTests {
         let productStore = ProductStore(productService: mockProductService)
         
         // When
-        await productStore.fetchProducts()
+        await productStore.initialFetchProducts()
         
         // Then
         #expect(productStore.state == .error(mockResults.description))

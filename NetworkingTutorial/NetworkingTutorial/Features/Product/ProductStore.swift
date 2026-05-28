@@ -35,12 +35,18 @@ enum ProductStoreError: LocalizedError {
 @Observable class ProductStore {
     
     private(set) var products: [Product] = []
+    // MARK: Filtering products addon
+//    private var totalProducts: [Product] = []
+//    private var filteredProducts: [Product] = []
+    
     private(set) var state: NetworkCallState = .initial
     
     private let productService: ProductService
     private var skipOffset = 0
     private let limit = 10
     private var total: Int = 0
+    
+    private var lastSearchedQuery: String?
     
     init(productService: ProductService = DefaultProductService()) {
         
@@ -58,7 +64,9 @@ enum ProductStoreError: LocalizedError {
         
         do {
             
-            let productResponse = try await productService.fetch(skip: skipOffset, limit: limit)
+            let productResponse = try await productService.fetch(skip: skipOffset,
+                                                                 limit: limit,
+                                                                 query: nil)
             
             products = productResponse.products
             total = productResponse.total
@@ -83,7 +91,7 @@ enum ProductStoreError: LocalizedError {
         
         do {
             
-            let productResponse = try await productService.fetch(skip: skipOffset, limit: limit)
+            let productResponse = try await productService.fetch(skip: skipOffset, limit: limit, query: lastSearchedQuery)
             let nextProducts = productResponse.products
             products.append(contentsOf: nextProducts)
             incrementSkipOffset()
@@ -98,6 +106,51 @@ enum ProductStoreError: LocalizedError {
     
     private func incrementSkipOffset() {
         skipOffset += 10
+    }
+    
+//    func filter(by searchText: String) {
+//        
+//        guard !searchText.isEmpty else {
+//            products = totalProducts
+//            return
+//        }
+//        
+//        filteredProducts = products.filter({ product in
+//            product.title.contains(searchText)
+//        })
+//        
+//        products = filteredProducts
+//    }
+    
+    func fetch(for query: String) async {
+        
+        // TODO: Exception: load more during paging
+//        guard !query.isEmpty else {
+//            // Too early to make a fetch
+//            return
+//        }
+        guard state.canLoad else { return }
+        print("Fetch for search")
+        state = .loading
+        products = []
+        skipOffset = 0
+        
+        do {
+            
+            let productResponse = try await productService.fetch(skip: skipOffset,
+                                                                 limit: limit,
+                                                                 query: query)
+            
+            products = productResponse.products
+            total = productResponse.total
+            lastSearchedQuery = query
+            incrementSkipOffset()
+            state = .loaded
+        } catch let error as RepositoryError {
+            state = .error(error.description)
+        } catch {
+            state = .error(error.localizedDescription)
+        }
     }
 }
 

@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ProductStoreView: View {
-    @State private var searchText: String = ""
     @State var productStore: ProductStore
     @State private var receivedProductStoreError: Bool = false
     
@@ -24,9 +23,9 @@ struct ProductStoreView: View {
                             Image(systemName: "line.horizontal.3")
                         }
                     }
-                    .task {
-                        await productStore.initialFetchProducts()
-                    }
+//                    .task {
+//                        await productStore.initialFetchProducts()
+//                    }
                     .onTriggerLoadAt(triggerDistance: 300) {
                         Task {
                             await productStore.fetchMore()
@@ -34,12 +33,12 @@ struct ProductStoreView: View {
                     }
 
             }
-            .searchable(text: $searchText, prompt: "Search")
         }
     }
 }
 
 struct ProductStoreListView: View {
+    @State private var searchText: String = ""
     @Binding var productStore: ProductStore
     
     var body: some View {
@@ -47,15 +46,30 @@ struct ProductStoreListView: View {
             ProductRow(product: product)
         }
         .overlay {
-            if case .error(let message) = productStore.state {
+            
+            switch productStore.state {
+            case .initial, .loading:
+                ProgressView()
+                    .controlSize(.large)
+            case .loaded:
+                if productStore.products.isEmpty {
+                    ContentUnavailableView("Nothing Found", systemImage: "basket")
+                }
+            case .error(let message):
                 Text(message)
                     .foregroundStyle(.red)
             }
+        }
+        .searchable(text: $searchText, prompt: "Search")
+        .task(id: searchText) {
             
-            if productStore.state == .loading {
-                ProgressView()
-                    .controlSize(.large)
-            }
+            // Manual debounce
+            try? await Task.sleep(for: .seconds(1))
+            
+            // Check if the task has been cancelled
+            guard !Task.isCancelled else { return }
+            
+            await productStore.fetch(for: searchText)
         }
     }
 }

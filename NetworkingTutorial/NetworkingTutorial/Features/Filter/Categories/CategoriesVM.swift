@@ -15,7 +15,7 @@ class CategoriesVM {
     var state: NetworkCallState = .initial
     private var service: CategoriesService
     
-    init(categories: [String], service: CategoriesService = DefaultCategoriesService()) {
+    init(categories: [String] = [], service: CategoriesService = DefaultCategoriesService()) {
         self.service = service
         self.categories = categories
     }

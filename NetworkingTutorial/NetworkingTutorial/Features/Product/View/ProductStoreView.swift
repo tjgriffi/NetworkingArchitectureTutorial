@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ProductStoreView: View {
     @State var productStore: ProductStore
-    @State private var receivedProductStoreError: Bool = false
+    @State private var isFilterShown: Bool = false
     
     var body: some View {
         ZStack {
@@ -17,19 +17,20 @@ struct ProductStoreView: View {
                 ProductStoreListView(productStore: $productStore)
                     .navigationTitle("Products")
                     .toolbar {
-                        NavigationLink {
-                            Text("Filtered Button view!!")
+                        Button {
+                            isFilterShown.toggle()
                         } label: {
-                            Image(systemName: "line.horizontal.3")
+                            Image(systemName: "slider.horizontal.3")
                         }
+
                     }
-//                    .task {
-//                        await productStore.initialFetchProducts()
-//                    }
                     .onTriggerLoadAt(triggerDistance: 300) {
                         Task {
                             await productStore.fetchMore()
                         }
+                    }
+                    .sheet(isPresented: $isFilterShown) {
+                        FilterProductsView( isFilterViewShown: $isFilterShown, productStore: $productStore)
                     }
 
             }
@@ -69,7 +70,7 @@ struct ProductStoreListView: View {
             // Check if the task has been cancelled
             guard !Task.isCancelled else { return }
             
-            await productStore.fetch(for: searchText)
+            await productStore.fetch(searchText: searchText, sortField: nil, sortOrder: nil, category: nil)
         }
     }
 }

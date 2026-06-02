@@ -55,7 +55,6 @@ struct NetworkClient: NetworkClientProtocol {
         } catch is CancellationError {
             throw RepositoryError.taskCancellation
         } catch {
-            debugPrint(error)
             throw RepositoryError.networkError(error: error)
         }
     }

@@ -46,38 +46,13 @@ enum ProductStoreError: LocalizedError {
     private let limit = 10
     private var total: Int = 0
     
-    private var lastSearchedQuery: String?
+    var lastConfiguration: ProductEndpoint.Configuration
     
-    init(productService: ProductService = DefaultProductService()) {
+    init(productService: ProductService = DefaultProductService(),
+         lastConfiguration: ProductEndpoint.Configuration = ProductEndpoint.Configuration()) {
         
         self.productService = productService
-    }
-    
-    func initialFetchProducts() async {
-        
-        guard state.canLoad && products.isEmpty else {
-            // Too early to make a fetch
-            return
-        }
-
-        state = .loading
-        
-        do {
-            
-            let productResponse = try await productService.fetch(skip: skipOffset,
-                                                                 limit: limit,
-                                                                 query: nil)
-            
-            products = productResponse.products
-            total = productResponse.total
-            incrementSkipOffset()
-            state = .loaded
-        } catch let error as RepositoryError {
-            state = .error(error.description)
-        } catch {
-            state = .error(error.localizedDescription)
-            
-        }
+        self.lastConfiguration = lastConfiguration
     }
     
     // Fetch more product when we reach the bottom of the list
@@ -91,7 +66,7 @@ enum ProductStoreError: LocalizedError {
         
         do {
             
-            let productResponse = try await productService.fetch(skip: skipOffset, limit: limit, query: lastSearchedQuery)
+            let productResponse = try await productService.fetch(skip: skipOffset, limit: limit, configuration: lastConfiguration)
             let nextProducts = productResponse.products
             products.append(contentsOf: nextProducts)
             incrementSkipOffset()
@@ -121,31 +96,27 @@ enum ProductStoreError: LocalizedError {
 //        
 //        products = filteredProducts
 //    }
-    
-    func fetch(for query: String) async {
+            
+    func fetch(searchText: String?, sortField: SortField?, sortOrder: SortOrder?, category: String?) async {
         
-        // TODO: Exception: load more during paging
-//        guard !query.isEmpty else {
-//            // Too early to make a fetch
-//            return
-//        }
         guard state.canLoad else { return }
-        print("Fetch for search")
+        
         state = .loading
         products = []
         skipOffset = 0
         
+        let configuration = ProductEndpoint.Configuration(searchText: searchText, category: category, sortField: sortField, sortOrder: sortOrder)
+        
+        
         do {
-            
-            let productResponse = try await productService.fetch(skip: skipOffset,
-                                                                 limit: limit,
-                                                                 query: query)
+            let productResponse = try await productService.fetch(skip: skipOffset, limit: limit, configuration: configuration)
             
             products = productResponse.products
             total = productResponse.total
-            lastSearchedQuery = query
+            lastConfiguration = configuration
             incrementSkipOffset()
             state = .loaded
+            
         } catch let error as RepositoryError {
             state = .error(error.description)
         } catch {

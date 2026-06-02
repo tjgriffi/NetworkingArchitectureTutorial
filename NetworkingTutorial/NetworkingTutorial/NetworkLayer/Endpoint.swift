@@ -54,19 +54,29 @@ extension Endpoint {
 struct ProductEndpoint: Endpoint {
     typealias Response = ProductResponse
     
+    struct Configuration: Equatable {
+        var searchText: String?
+        var category: String?
+        var sortField: SortField?
+        var sortOrder: SortOrder?
+    }
     
     var path: String {
-        if searchQuery != nil {
+        
+        if configuration.searchText != nil {
             "/products/search"
+        } else if let category = configuration.category {
+            "/products/category/\(category)"
         } else {
             "/products"
         }
+        
     }
     let method: HTTPMethod = .get
     
     var limit: Int
     var skip: Int
-    var searchQuery: String?
+    var configuration: Configuration
     
     var queryItems: [URLQueryItem] {
         var items: [URLQueryItem] = [
@@ -74,8 +84,17 @@ struct ProductEndpoint: Endpoint {
             URLQueryItem(name: "skip", value: "\(skip)")
         ]
         
-        if let searchQuery {
+        if let searchQuery = configuration.searchText, configuration.category == nil {
+            // If it has a search value it cant have a category
             items.append(.init(name: "q", value: searchQuery))
+        }
+        
+        switch configuration.sortField {
+        case .priceAsc, .priceDesc:
+            items.append(URLQueryItem(name: "sortBy", value: configuration.sortField?.queryValue))
+            items.append(URLQueryItem(name: "order", value: configuration.sortOrder?.rawValue))
+        default:
+            items.append(URLQueryItem(name: "sortBy", value: configuration.sortField?.queryValue))
         }
         
         return items

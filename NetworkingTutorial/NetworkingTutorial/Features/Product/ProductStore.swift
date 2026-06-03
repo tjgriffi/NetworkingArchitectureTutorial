@@ -21,7 +21,24 @@ enum NetworkCallState: Equatable {
             false
         case .loaded:
             true
-        case .error(let string):
+        case .error(let _):
+            true
+        }
+    }
+}
+
+enum FetchIntent: Equatable {
+    case initial
+    case searching
+    case more
+    case filter
+    case retry
+    
+    var resetProducts: Bool {
+        switch self {
+        case .more:
+            false
+        default:
             true
         }
     }
@@ -35,9 +52,6 @@ enum ProductStoreError: LocalizedError {
 @Observable class ProductStore {
     
     private(set) var products: [Product] = []
-    // MARK: Filtering products addon
-//    private var totalProducts: [Product] = []
-//    private var filteredProducts: [Product] = []
     
     private(set) var state: NetworkCallState = .initial
     
@@ -46,81 +60,70 @@ enum ProductStoreError: LocalizedError {
     private let limit = 10
     private var total: Int = 0
     
-    var lastConfiguration: ProductEndpoint.Configuration
+    var configuration: ProductEndpoint.Configuration
+    private var lastConfiguration: ProductEndpoint.Configuration?
     
     init(productService: ProductService = DefaultProductService(),
-         lastConfiguration: ProductEndpoint.Configuration = ProductEndpoint.Configuration()) {
+         configuration: ProductEndpoint.Configuration = ProductEndpoint.Configuration()) {
         
         self.productService = productService
-        self.lastConfiguration = lastConfiguration
+        self.configuration = configuration
     }
     
-    // Fetch more product when we reach the bottom of the list
-    func fetchMore() async {
+    /// Queries the productService to grab products given an intent value
+    /// - Parameter intent: A FetchIntent that determines which products should be returned from the backend
+    func fetch(for intent: FetchIntent) async {
+        guard state.canLoad, canLoad(for: intent) else { return }
         
-        guard state.canLoad && products.count < total else {
-            return
+        if intent == .searching {
+            // Manual debounce
+            try? await Task.sleep(for: .seconds(1))
+            
+            // Check if the task has been cancelled
+            guard !Task.isCancelled else {
+                return
+            }
         }
         
+        print("started fetch for intent: \(intent)")
         state = .loading
+        
+        // Check if we need to reset products for the intent
+        products = intent.resetProducts ? [] : products
+        skipOffset = products.count
         
         do {
             
-            let productResponse = try await productService.fetch(skip: skipOffset, limit: limit, configuration: lastConfiguration)
-            let nextProducts = productResponse.products
-            products.append(contentsOf: nextProducts)
-            incrementSkipOffset()
-            state = .loaded
-        } catch let error as RepositoryError {
-            state = .error(error.description)
-        } catch {
-            state = .error(error.localizedDescription)
-            
-        }
-    }
-    
-    private func incrementSkipOffset() {
-        skipOffset += 10
-    }
-    
-//    func filter(by searchText: String) {
-//        
-//        guard !searchText.isEmpty else {
-//            products = totalProducts
-//            return
-//        }
-//        
-//        filteredProducts = products.filter({ product in
-//            product.title.contains(searchText)
-//        })
-//        
-//        products = filteredProducts
-//    }
-            
-    func fetch(searchText: String?, sortField: SortField?, sortOrder: SortOrder?, category: String?) async {
-        
-        guard state.canLoad else { return }
-        
-        state = .loading
-        products = []
-        skipOffset = 0
-        
-        let configuration = ProductEndpoint.Configuration(searchText: searchText, category: category, sortField: sortField, sortOrder: sortOrder)
-        
-        
-        do {
             let productResponse = try await productService.fetch(skip: skipOffset, limit: limit, configuration: configuration)
             
-            products = productResponse.products
+            products.append(contentsOf: productResponse.products)
             total = productResponse.total
             lastConfiguration = configuration
-            incrementSkipOffset()
             state = .loaded
-            
+            print("finished fetch for intent: \(intent)")
         } catch let error as RepositoryError {
             state = .error(error.description)
         } catch {
             state = .error(error.localizedDescription)
+        }
+    }
+    
+    /// Determines if the FetchIntent can load more products at this time
+    /// - Parameter intent: The FetchIntent used to determine which products are being fetched from the backend
+    /// - Returns: A boolean of whether or not the products can be grabbed at this moment
+    private func canLoad(for intent: FetchIntent) -> Bool {
+        
+        switch intent {
+        case .initial:
+            products.isEmpty
+        case .searching:
+            state != .initial
+        case .more:
+            state != .loading && products.count < total && lastConfiguration == configuration
+        case .filter:
+            true
+        case .retry:
+            true
         }
     }
 }

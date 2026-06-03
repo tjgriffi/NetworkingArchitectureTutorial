@@ -14,7 +14,7 @@ struct ProductStoreView: View {
     var body: some View {
         ZStack {
             NavigationStack {
-                ProductStoreListView(productStore: $productStore)
+                ProductStoreListView(productStore: productStore)
                     .navigationTitle("Products")
                     .toolbar {
                         Button {
@@ -26,11 +26,14 @@ struct ProductStoreView: View {
                     }
                     .onTriggerLoadAt(triggerDistance: 300) {
                         Task {
-                            await productStore.fetchMore()
+                            await productStore.fetch(for: .more)
                         }
                     }
                     .sheet(isPresented: $isFilterShown) {
-                        FilterProductsView( isFilterViewShown: $isFilterShown, productStore: $productStore)
+                        FilterProductsView( isFilterViewShown: $isFilterShown, productStore: productStore)
+                    }
+                    .task {
+                        await productStore.fetch(for: .initial)
                     }
 
             }
@@ -40,7 +43,7 @@ struct ProductStoreView: View {
 
 struct ProductStoreListView: View {
     @State private var searchText: String = ""
-    @Binding var productStore: ProductStore
+    @Bindable var productStore: ProductStore
     
     var body: some View {
         List(productStore.products) { product in
@@ -61,16 +64,11 @@ struct ProductStoreListView: View {
                     .foregroundStyle(.red)
             }
         }
-        .searchable(text: $searchText, prompt: "Search")
-        .task(id: searchText) {
+        .searchable(text: $productStore.configuration.searchText, prompt: "Search")
+        .task(id: productStore.configuration.searchText) {
             
-            // Manual debounce
-            try? await Task.sleep(for: .seconds(1))
-            
-            // Check if the task has been cancelled
-            guard !Task.isCancelled else { return }
-            
-            await productStore.fetch(searchText: searchText, sortField: nil, sortOrder: nil, category: nil)
+//            await productStore.fetch(searchText: searchText, sortField: nil, sortOrder: nil, category: nil)
+            await productStore.fetch(for: .searching)
         }
     }
 }

@@ -16,20 +16,21 @@ struct FilterProductsView: View {
     @State private var sortOrder: SortOrder?
     @State private var selectedCategory: String?
     
-    @Binding var productStore: ProductStore
+    @Bindable var productStore: ProductStore
         
     var body: some View {
         NavigationStack {
             List {
                 
-                Picker("Sort By", selection: $sortField) {
+                Picker("Sort By", selection: $productStore.configuration.sortField) {
                     ForEach(SortField.allCases) { sortFieldCase in
                         Text(sortFieldCase.displayName)
+                            .tag(sortFieldCase)
                     }
                 }
                 .pickerStyle(.inline)
                 
-                Picker("Order", selection: $sortOrder) {
+                Picker("Order", selection: $productStore.configuration.sortOrder) {
                     ForEach(SortOrder.allCases, id: \.self) { sortOrderCase in
                         Text(sortOrderCase.displayName)
                             .tag(sortOrderCase)
@@ -37,7 +38,7 @@ struct FilterProductsView: View {
                 }
                 .pickerStyle(.inline)
                 
-                Picker("Category", selection: $selectedCategory) {
+                Picker("Category", selection: $productStore.configuration.category) {
                     ForEach(categoryVM.categories, id: \.self) { category in
                         Text(category)
                             .tag(category)
@@ -53,8 +54,7 @@ struct FilterProductsView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Done", role: .close) {
                         Task {
-                            // TODO:  Tells the ProductStore view what to show
-                            await productStore.fetch(searchText: nil, sortField: sortField, sortOrder: sortOrder, category: selectedCategory)
+                            await productStore.fetch(for: .filter)
                         }
                         isFilterViewShown.toggle()
                     }
@@ -62,7 +62,6 @@ struct FilterProductsView: View {
                 
                 ToolbarItem(id: "Cancel", placement: .topBarTrailing) {
                     Button("Clear", role: .destructive) {
-                        // TODO: Close the sheet
                         isFilterViewShown.toggle()
                     }
                     .bold()
@@ -83,5 +82,5 @@ struct FilterProductsView: View {
                                                               "Groceries",
                                                               "Home-Decoration"]))),
                        isFilterViewShown: .constant(true),
-                       productStore: .constant(ProductStore(productService: MockProductService(error: nil, result: .example))))
+                       productStore: ProductStore(productService: MockProductService(error: nil, result: .example)))
 }

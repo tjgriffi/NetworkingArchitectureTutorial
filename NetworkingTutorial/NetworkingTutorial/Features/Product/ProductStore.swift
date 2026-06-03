@@ -85,7 +85,6 @@ enum ProductStoreError: LocalizedError {
             }
         }
         
-        print("started fetch for intent: \(intent)")
         state = .loading
         
         // Check if we need to reset products for the intent
@@ -100,7 +99,6 @@ enum ProductStoreError: LocalizedError {
             total = productResponse.total
             lastConfiguration = configuration
             state = .loaded
-            print("finished fetch for intent: \(intent)")
         } catch let error as RepositoryError {
             state = .error(error.description)
         } catch {

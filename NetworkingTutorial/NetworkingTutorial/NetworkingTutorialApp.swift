@@ -22,10 +22,12 @@ struct NetworkingTutorialApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
+    
+    @State private var productStore = ProductStore()
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ProductStoreView(productStore: productStore)
         }
         .modelContainer(sharedModelContainer)
     }

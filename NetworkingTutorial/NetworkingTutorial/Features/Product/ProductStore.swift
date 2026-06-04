@@ -65,10 +65,12 @@ enum ProductStoreError: LocalizedError {
     private var lastConfiguration: ProductEndpoint.Configuration?
     
     init(productService: ProductService = DefaultProductService(),
-         configuration: ProductEndpoint.Configuration = ProductEndpoint.Configuration()) {
+         configuration: ProductEndpoint.Configuration = ProductEndpoint.Configuration(),
+         task: Task<(), Error>? = nil) {
         
         self.productService = productService
         self.configuration = configuration
+        self.task = task
     }
     
     /// Used to start/cancel the fetch task
@@ -80,12 +82,8 @@ enum ProductStoreError: LocalizedError {
         task?.cancel()
         
         self.task = Task {
-            MainActor.assertIsolated("Task should be on the main actor")
             await serviceFetch(for: intent)
         }
-        
-        // In unit tests we can use this to check the results of our task calls
-//        await task?.result
     }
     
     /// Queries the productService to grab products given an intent value

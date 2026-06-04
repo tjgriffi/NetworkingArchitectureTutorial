@@ -53,9 +53,7 @@ struct FilterProductsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Done", role: .close) {
-                        Task {
-                            await productStore.fetch(for: .filter)
-                        }
+                        productStore.fetch(for: .filter)
                         isFilterViewShown.toggle()
                     }
                 }

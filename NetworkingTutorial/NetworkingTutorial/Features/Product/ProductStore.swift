@@ -56,9 +56,10 @@ enum ProductStoreError: LocalizedError {
     private(set) var state: NetworkCallState = .initial
     
     private let productService: ProductService
-    private var skipOffset = 0
     private let limit = 10
     private var total: Int = 0
+    
+    private var task: Task<(), Error>?
     
     var configuration: ProductEndpoint.Configuration
     private var lastConfiguration: ProductEndpoint.Configuration?
@@ -70,32 +71,48 @@ enum ProductStoreError: LocalizedError {
         self.configuration = configuration
     }
     
+    /// Used to start/cancel the fetch task
+    /// - Parameter intent: A FetchIntent that determines which products should be returned from the backend
+    @MainActor
+    func fetch(for intent: FetchIntent) {
+        guard state.canLoad, canLoad(for: intent) else { return }
+        
+        task?.cancel()
+        
+        self.task = Task {
+            MainActor.assertIsolated("Task should be on the main actor")
+            await serviceFetch(for: intent)
+        }
+        
+        // In unit tests we can use this to check the results of our task calls
+//        await task?.result
+    }
+    
     /// Queries the productService to grab products given an intent value
     /// - Parameter intent: A FetchIntent that determines which products should be returned from the backend
-    func fetch(for intent: FetchIntent) async {
-        guard state.canLoad, canLoad(for: intent) else { return }
+    private func serviceFetch(for intent: FetchIntent) async {
         
         if intent == .searching {
             // Manual debounce
             try? await Task.sleep(for: .seconds(1))
             
             // Check if the task has been cancelled
-            guard !Task.isCancelled else {
-                return
-            }
+            guard !Task.isCancelled else { return }
         }
         
         state = .loading
         
-        // Check if we need to reset products for the intent
-        products = intent.resetProducts ? [] : products
-        skipOffset = products.count
-        
         do {
             
-            let productResponse = try await productService.fetch(skip: skipOffset, limit: limit, configuration: configuration)
+            let productResponse = try await productService.fetch(skip: products.count, limit: limit, configuration: configuration)
+            
+            guard !Task.isCancelled else { return }
+            
+            // Check if we need to reset products for the intent
+            products = intent.resetProducts ? [] : products
             
             products.append(contentsOf: productResponse.products)
+            
             total = productResponse.total
             lastConfiguration = configuration
             state = .loaded

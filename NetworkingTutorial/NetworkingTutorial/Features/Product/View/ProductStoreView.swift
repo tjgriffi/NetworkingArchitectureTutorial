@@ -25,17 +25,14 @@ struct ProductStoreView: View {
 
                     }
                     .onTriggerLoadAt(triggerDistance: 300) {
-                        Task {
-                            await productStore.fetch(for: .more)
-                        }
+                        productStore.fetch(for: .more)
                     }
                     .sheet(isPresented: $isFilterShown) {
                         FilterProductsView( isFilterViewShown: $isFilterShown, productStore: productStore)
                     }
-                    .task {
-                        await productStore.fetch(for: .initial)
+                    .onAppear {
+                        productStore.fetch(for: .initial)
                     }
-
             }
         }
     }
@@ -65,10 +62,8 @@ struct ProductStoreListView: View {
             }
         }
         .searchable(text: $productStore.configuration.searchText, prompt: "Search")
-        .task(id: productStore.configuration.searchText) {
-            
-//            await productStore.fetch(searchText: searchText, sortField: nil, sortOrder: nil, category: nil)
-            await productStore.fetch(for: .searching)
+        .onChange(of: productStore.configuration.searchText) { oldValue, newValue in
+            productStore.fetch(for: .searching)
         }
     }
 }

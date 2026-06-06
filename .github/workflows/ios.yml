@@ -28,7 +28,8 @@ jobs:
           platform: ${{ 'iOS Simulator' }}
         run: |
           # xcrun simctl list devices available
-          xcodebuild clean build test -showdestinations -project NetworkingTutorial/NetworkingTutorial.xcodeproj -scheme "NetworkingTutorial" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 17,OS=26.2" ONLY_ACTIVE_ARCH=YES SWIFT_TREAT_WARNINGS_AS_ERRORS=YES OTHER_SWIFT_FLAGS="-D ED_SKIP_SWIFT_FORMAT"
+          # clean build test -showdestinations
+          xcodebuild clean build-for-testing -project NetworkingTutorial/NetworkingTutorial.xcodeproj -scheme "NetworkingTutorial" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 17,OS=26.2" ONLY_ACTIVE_ARCH=YES SWIFT_TREAT_WARNINGS_AS_ERRORS=YES OTHER_SWIFT_FLAGS="-D ED_SKIP_SWIFT_FORMAT"
           # xcrun xctrace returns via stderr, not the expected stdout (see https://developer.apple.com/forums/thread/663959)
           # device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | awk '{$1=$1;print}' | sed -e "s/ Simulator$//"`
           # if [ $scheme = NetworkingTutorial ]; then scheme=$(cat NetworkingTutorial); fi

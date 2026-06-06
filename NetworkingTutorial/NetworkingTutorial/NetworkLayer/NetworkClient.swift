@@ -20,7 +20,7 @@ struct NetworkClient: NetworkClientProtocol {
         self.baseURL = baseURL
     }
     
-    @concurrent
+    @Sendable
     func fetch<E>(_ endpoint: E) async throws -> E.Response where E : Endpoint {
         
         let request = try endpoint.makeRequest(baseURL: baseURL)

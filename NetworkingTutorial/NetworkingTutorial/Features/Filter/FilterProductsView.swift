@@ -52,7 +52,7 @@ struct FilterProductsView: View {
             .navigationTitle("Search for Products")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Done", role: .close) {
+                    Button("Done", role: .destructive) {
                         productStore.fetch(for: .filter)
                         isFilterViewShown.toggle()
                     }

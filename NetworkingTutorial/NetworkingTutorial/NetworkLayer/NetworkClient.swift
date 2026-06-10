@@ -8,16 +8,17 @@
 import Foundation
 
 protocol NetworkClientProtocol {
-//    func fetch<T: Decodable>(_ request: URLRequest) async throws -> T
     func fetch<E: Endpoint>(_ endpoint: E) async throws -> E.Response
 }
 
 struct NetworkClient: NetworkClientProtocol {
     
     let baseURL: URL
+    private let session: URLSession
     
-    init(baseURL: URL = URL(string: NTConstants.baseURLString)!) {
+    init(baseURL: URL = URL(string: NTConstants.baseURLString)!, session: URLSession = URLSession.shared) {
         self.baseURL = baseURL
+        self.session = session
     }
     
     @concurrent
@@ -30,7 +31,7 @@ struct NetworkClient: NetworkClientProtocol {
         }
         
         do {
-            let (data, response) = try await URLSession.shared.data(from: requestURL)
+            let (data, response) = try await session.data(from: requestURL)
             
             
             guard let httpResponse = response as? HTTPURLResponse else {
@@ -38,7 +39,6 @@ struct NetworkClient: NetworkClientProtocol {
             }
             
             guard (0...299).contains(httpResponse.statusCode) else {
-                
                 let serverError = try JSONDecoder().decode(ServerError.self, from: data)
                 throw RepositoryError.badStatusCode(statusCode: httpResponse.statusCode, message: serverError.message)
                 
@@ -54,6 +54,8 @@ struct NetworkClient: NetworkClientProtocol {
             throw RepositoryError.taskCancellation
         } catch is CancellationError {
             throw RepositoryError.taskCancellation
+        } catch let error as RepositoryError {
+            throw error
         } catch {
             throw RepositoryError.networkError(error: error)
         }

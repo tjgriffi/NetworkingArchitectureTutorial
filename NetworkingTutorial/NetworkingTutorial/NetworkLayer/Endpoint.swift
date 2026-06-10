@@ -47,7 +47,14 @@ extension Endpoint {
     func map(data: Data) throws -> Response {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .secondsSince1970
-        return try decoder.decode(Response.self, from: data)
+        
+        do {
+            let response = try decoder.decode(Response.self, from: data)
+            
+            return response
+        } catch {
+            throw RepositoryError.decodingFailed
+        }
     }
 }
 

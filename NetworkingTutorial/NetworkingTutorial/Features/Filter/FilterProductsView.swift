@@ -52,14 +52,14 @@ struct FilterProductsView: View {
             .navigationTitle("Search for Products")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Done", role: .destructive) {
+                    Button("Done", role: .confirm) {
                         productStore.fetch(for: .filter)
                         isFilterViewShown.toggle()
                     }
                 }
                 
                 ToolbarItem(id: "Cancel", placement: .topBarTrailing) {
-                    Button("Clear", role: .destructive) {
+                    Button("Clear", role: .cancel) {
                         isFilterViewShown.toggle()
                     }
                     .bold()

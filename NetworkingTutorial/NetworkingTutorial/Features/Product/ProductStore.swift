@@ -65,17 +65,15 @@ enum ProductStoreError: LocalizedError {
     private var lastConfiguration: ProductEndpoint.Configuration?
     
     init(productService: ProductService = DefaultProductService(),
-         configuration: ProductEndpoint.Configuration = ProductEndpoint.Configuration(),
-         task: Task<(), Error>? = nil) {
+         configuration: ProductEndpoint.Configuration = ProductEndpoint.Configuration()) {
         
         self.productService = productService
         self.configuration = configuration
-        self.task = task
     }
     
     /// Used to start/cancel the fetch task
     /// - Parameter intent: A FetchIntent that determines which products should be returned from the backend
-    @MainActor
+//    @MainActor
     func fetch(for intent: FetchIntent) {
         guard state.canLoad, canLoad(for: intent) else { return }
         

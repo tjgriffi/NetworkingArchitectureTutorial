@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
      
-      - name: Build
+      - name: Clean, Build, Test
         env:
           scheme: NetworkingTutorial
           platform: ${{ 'iOS Simulator' }}

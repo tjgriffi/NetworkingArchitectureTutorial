@@ -27,7 +27,7 @@ jobs:
           scheme: NetworkingTutorial
           platform: ${{ 'iOS Simulator' }}
         run: |
-          xcodebuild clean build test -project NetworkingTutorial/NetworkingTutorial.xcodeproj -scheme "NetworkingTutorial" -showdestinations CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 17,OS=26.2" ONLY_ACTIVE_ARCH=YES OTHER_SWIFT_FLAGS="-D ED_SKIP_SWIFT_FORMAT"
+          xcodebuild test -project NetworkingTutorial/NetworkingTutorial.xcodeproj -scheme "NetworkingTutorial" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" ONLY_ACTIVE_ARCH=YES OTHER_SWIFT_FLAGS="-D ED_SKIP_SWIFT_FORMAT"
           # xcrun simctl list devices available
           # clean build test -showdestinations
       # - name: Test

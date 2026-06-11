@@ -32,7 +32,7 @@ jobs:
 
       - name: Show available destinations
         run: |
-          xcodebuild -showdestinations -project /Users/runner/work/NetworkingArchitectureTutorial/NetworkingArchitectureTutorial/NetworkingTutorial/NetworkingTutorial.xcodeproj -scheme "NetworkingTutorial"
+          xcodebuild -showdestinations -project /Users/runner/work/NetworkingArchitectureTutorial/NetworkingArchitectureTutorial/NetworkingTutorial.xcodeproj -scheme "NetworkingTutorial"
 
       - name: Checkout
         uses: actions/checkout@v4

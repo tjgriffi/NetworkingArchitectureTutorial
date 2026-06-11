@@ -24,10 +24,10 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Show available destinations
-        run: |
-          xcodebuild -list -project 'NetworkingTutorial/NetworkingTutorial.xcodeproj'
-          xcodebuild -showdestinations -project 'NetworkingTutorial/NetworkingTutorial.xcodeproj' -scheme "NetworkingTutorial" 
+      # - name: Show available destinations
+      #   run: |
+      #     xcodebuild -list -project 'NetworkingTutorial/NetworkingTutorial.xcodeproj'
+      #     xcodebuild -showdestinations -project 'NetworkingTutorial/NetworkingTutorial.xcodeproj' -scheme "NetworkingTutorial" 
 
       - name: Checkout
         uses: actions/checkout@v4

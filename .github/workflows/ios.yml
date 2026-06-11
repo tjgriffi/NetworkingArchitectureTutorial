@@ -24,6 +24,10 @@ jobs:
         with:
           xcode-version: latest-stable
 
+      - name: Show available destinations
+        run: |
+          xcodebuild -showdestinations
+
       - name: Checkout
         uses: actions/checkout@v4
      

@@ -19,6 +19,11 @@ jobs:
       #     echo $default | cat >default
       #     echo Using default scheme: $default
     steps:
+      - name: setup-xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
       - name: Checkout
         uses: actions/checkout@v4
      

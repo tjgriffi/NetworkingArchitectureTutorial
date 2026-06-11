@@ -24,15 +24,10 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Debug — Print directory structure
-        run: |
-          pwd
-          ls -la
-          find . -name "*.xcodeproj" -maxdepth 6
-
       - name: Show available destinations
         run: |
-          xcodebuild -showdestinations -project /Users/runner/work/NetworkingArchitectureTutorial/NetworkingArchitectureTutorial/NetworkingTutorial.xcodeproj -scheme "NetworkingTutorial"
+          xcodebuild -list -project 'NetworkingTutorial/NetworkingTutorial.xcodeproj'
+          xcodebuild -showdestinations -project 'NetworkingTutorial/NetworkingTutorial.xcodeproj' -scheme "NetworkingTutorial" 
 
       - name: Checkout
         uses: actions/checkout@v4

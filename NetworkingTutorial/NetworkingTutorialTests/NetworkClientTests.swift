@@ -65,7 +65,7 @@ class NetworkClientTests {
         
         override func startLoading() {
             guard let handler = MockURLProtocol.requestHandler else {
-                Issue.record("No request handler was set", severity: .error)
+                Issue.record("No request handler was set")
                 #expect(MockURLProtocol.requestHandler != nil)
                 return
             }

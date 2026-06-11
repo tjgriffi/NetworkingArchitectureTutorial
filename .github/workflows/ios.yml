@@ -26,7 +26,7 @@ jobs:
 
       - name: Show available destinations
         run: |
-          xcodebuild -project NetworkingTutorial/NetworkingTutorial.xcodeproj -scheme "NetworkingTutorial" -showdestinations
+          xcodebuild -showdestinations -project NetworkingTutorial/NetworkingTutorial.xcodeproj -scheme "NetworkingTutorial"
 
       - name: Checkout
         uses: actions/checkout@v4

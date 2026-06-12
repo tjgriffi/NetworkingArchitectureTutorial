@@ -110,195 +110,195 @@ class NetworkClientTests {
         """
     }
 
-//    @Test func fetch_with_endpoint_invalidURL() async throws {
-//        // Given
-//        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: nil, error: nil)
-//        let sutNetworkClient = NetworkClient(session: session)
-//        
-//        // When
-//        let error = await #expect(throws: RepositoryError.self) {
-//            
-//            try await sutNetworkClient.fetch(mockEndpoint)
-//        }
-//        
-//        // Then
-//        #expect(error?.description == RepositoryError.invalidURL.description)
-//    }
-//    
-//    @Test func fetch_with_endpoint_invalidHttpResponse() async throws {
-//        
-//        // Given
-//        let data = mockDataString.data(using: .utf8)!
-//        MockURLProtocol.requestHandler = { request in
-//            
-//            let response = URLResponse()
-//            return (response, data)
-//        }
-//        
-//        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: nil)
-//        let sutNetworkClient = NetworkClient(session: session)
-//        
-//        // When
-//        let error = await #expect(throws: RepositoryError.self) {
-//            
-//            try await sutNetworkClient.fetch(mockEndpoint)
-//        }
-//        
-//        // Then
-//        #expect(error?.description == RepositoryError.invalidHttpResponse.description)
-//    }
-//    
-//    @Test func fetch_with_endpoint_badStatus() async throws {
-//        // Given
-//        let data = mockDataStringServerError.data(using: .utf8)!
-//        MockURLProtocol.requestHandler = { request in
-//            
-//            let response = HTTPURLResponse(
-//                url: URL(string:"path")!,
-//                statusCode: 404,
-//                httpVersion: "",
-//                headerFields: nil)!
-//            
-//            return (response, data)
-//        }
-//        
-//        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: nil)
-//        let sutNetworkClient = NetworkClient(session: session)
-//        
-//        // When
-//        let error = await #expect(throws: RepositoryError.self) {
-//            
-//            try await sutNetworkClient.fetch(mockEndpoint)
-//        }
-//        
-//        // Then
-//        switch error! {
-//        case .badStatusCode(let _, let _):
-//            #expect(error?.description == "Status code of http response outside of 200 - 299 range")
-//        default:
-//            Issue.record("Should see a badStatus error")
-//        }
-//        
-//    }
-//    
-//    @Test func fetch_with_endpoint_taskCancellation() async throws {
-//        
-//        // Given
-//        let data = mockDataString.data(using: .utf8)!
-//        MockURLProtocol.requestHandler = { request in
-//            let response = HTTPURLResponse(
-//                url: URL(string:"path")!,
-//                statusCode: 200,
-//                httpVersion: "",
-//                headerFields: nil)!
-//            
-//            return (response, data)
-//        }
-//        
-//        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: nil)
-//        let sutNetworkClient = NetworkClient(session: session)
-//        
-//        var task: Task<Void, Never>?
-//        
-//        // When
-//        var error: RepositoryError?
-//        task = Task {
-//            error = await #expect(throws: RepositoryError.self) {
-//                
-//                async let result = sutNetworkClient.fetch(mockEndpoint)
-//                async let result2 = Task.sleep(for: .seconds(1))
-//                
-//                try await [result, result2]
-//            }
-//        }
-//        
-//        task?.cancel()
-//        try await Task.sleep(for: .seconds(1))  // Sleep so we can wait for the error to be set inside of the local task
-//        
-//        // Then
-//        #expect(error?.description == RepositoryError.taskCancellation.description)
-//    }
-//    
-//    @Test func fetch_with_endpoint_decodingFailed() async throws {
-//        // Given
-//        let data = "Corrupted data".data(using: .utf8)!
-//        MockURLProtocol.requestHandler = { request in
-//            
-//            let response = HTTPURLResponse(
-//                url: URL(string:"path")!,
-//                statusCode: 200,
-//                httpVersion: "",
-//                headerFields: nil)!
-//            
-//            return (response, data)
-//        }
-//        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: nil)
-//        let sutNetworkClient = NetworkClient(session: session)
-//        
-//        // When
-//        let error = await #expect(throws: RepositoryError.self) {
-//            
-//            try await sutNetworkClient.fetch(mockEndpoint)
-//        }
-//        
-//        // Then
-//        #expect(error?.description == RepositoryError.decodingFailed.description)
-//    }
-//    
-//    @Test func fetch_with_endpoint_networkError() async throws {
-//        // Given
-//        let data = mockDataString.data(using: .utf8)!
-//        MockURLProtocol.requestHandler = { request in
-//            
-//            let response = HTTPURLResponse(
-//                url: URL(string:"path")!,
-//                statusCode: 200,
-//                httpVersion: "",
-//                headerFields: nil)!
-//            
-//            return (response, data)
-//        }
-//        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: PredicateError.forceCastFailure )
-//        let sutNetworkClient = NetworkClient(session: session)
-//        
-//        // When
-//        let error = await #expect(throws: RepositoryError.self) {
-//            
-//            try await sutNetworkClient.fetch(mockEndpoint)
-//        }
-//        
-//        // Then
-//        switch error! {
-//        case .networkError(let errorMsg):
-//            #expect(error?.description == "There was a network error: \(errorMsg.localizedDescription)")
-//        default:
-//            Issue.record("Should see a network error")
-//        }
-//        
-//    }
-//    
-//    @Test func fetch_with_endpoint_response_success() async throws {
-//        // Given
-//        let data = mockDataString.data(using: .utf8)!
-//        MockURLProtocol.requestHandler = { request in
-//            
-//            let response = HTTPURLResponse(
-//                url: URL(string:"path")!,
-//                statusCode: 201,
-//                httpVersion: "",
-//                headerFields: nil)!
-//            
-//            return (response, data)
-//        }
-//        
-//        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: nil)
-//        let sutNetworkClient = NetworkClient(session: session)
-//        
-//        // When
-//        let response = try await sutNetworkClient.fetch(mockEndpoint)
-//        
-//        // Then
-//        #expect(response.count == 1)
-//        #expect(response["key"] == "success")
-//    }
+    @Test func fetch_with_endpoint_invalidURL() async throws {
+        // Given
+        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: nil, error: nil)
+        let sutNetworkClient = NetworkClient(session: session)
+        
+        // When
+        let error = await #expect(throws: RepositoryError.self) {
+            
+            try await sutNetworkClient.fetch(mockEndpoint)
+        }
+        
+        // Then
+        #expect(error?.description == RepositoryError.invalidURL.description)
+    }
+    
+    @Test func fetch_with_endpoint_invalidHttpResponse() async throws {
+        
+        // Given
+        let data = mockDataString.data(using: .utf8)!
+        MockURLProtocol.requestHandler = { request in
+            
+            let response = URLResponse()
+            return (response, data)
+        }
+        
+        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: nil)
+        let sutNetworkClient = NetworkClient(session: session)
+        
+        // When
+        let error = await #expect(throws: RepositoryError.self) {
+            
+            try await sutNetworkClient.fetch(mockEndpoint)
+        }
+        
+        // Then
+        #expect(error?.description == RepositoryError.invalidHttpResponse.description)
+    }
+    
+    @Test func fetch_with_endpoint_badStatus() async throws {
+        // Given
+        let data = mockDataStringServerError.data(using: .utf8)!
+        MockURLProtocol.requestHandler = { request in
+            
+            let response = HTTPURLResponse(
+                url: URL(string:"path")!,
+                statusCode: 404,
+                httpVersion: "",
+                headerFields: nil)!
+            
+            return (response, data)
+        }
+        
+        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: nil)
+        let sutNetworkClient = NetworkClient(session: session)
+        
+        // When
+        let error = await #expect(throws: RepositoryError.self) {
+            
+            try await sutNetworkClient.fetch(mockEndpoint)
+        }
+        
+        // Then
+        switch error! {
+        case .badStatusCode(let _, let _):
+            #expect(error?.description == "Status code of http response outside of 200 - 299 range")
+        default:
+            Issue.record("Should see a badStatus error")
+        }
+        
+    }
+    
+    @Test func fetch_with_endpoint_taskCancellation() async throws {
+        
+        // Given
+        let data = mockDataString.data(using: .utf8)!
+        MockURLProtocol.requestHandler = { request in
+            let response = HTTPURLResponse(
+                url: URL(string:"path")!,
+                statusCode: 200,
+                httpVersion: "",
+                headerFields: nil)!
+            
+            return (response, data)
+        }
+        
+        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: nil)
+        let sutNetworkClient = NetworkClient(session: session)
+        
+        var task: Task<Void, Never>?
+        
+        // When
+        var error: RepositoryError?
+        task = Task {
+            error = await #expect(throws: RepositoryError.self) {
+                
+                async let result = sutNetworkClient.fetch(mockEndpoint)
+                async let result2 = Task.sleep(for: .seconds(1))
+                
+                try await [result, result2]
+            }
+        }
+        
+        task?.cancel()
+        try await Task.sleep(for: .seconds(1))  // Sleep so we can wait for the error to be set inside of the local task
+        
+        // Then
+        #expect(error?.description == RepositoryError.taskCancellation.description)
+    }
+    
+    @Test func fetch_with_endpoint_decodingFailed() async throws {
+        // Given
+        let data = "Corrupted data".data(using: .utf8)!
+        MockURLProtocol.requestHandler = { request in
+            
+            let response = HTTPURLResponse(
+                url: URL(string:"path")!,
+                statusCode: 200,
+                httpVersion: "",
+                headerFields: nil)!
+            
+            return (response, data)
+        }
+        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: nil)
+        let sutNetworkClient = NetworkClient(session: session)
+        
+        // When
+        let error = await #expect(throws: RepositoryError.self) {
+            
+            try await sutNetworkClient.fetch(mockEndpoint)
+        }
+        
+        // Then
+        #expect(error?.description == RepositoryError.decodingFailed.description)
+    }
+    
+    @Test func fetch_with_endpoint_networkError() async throws {
+        // Given
+        let data = mockDataString.data(using: .utf8)!
+        MockURLProtocol.requestHandler = { request in
+            
+            let response = HTTPURLResponse(
+                url: URL(string:"path")!,
+                statusCode: 200,
+                httpVersion: "",
+                headerFields: nil)!
+            
+            return (response, data)
+        }
+        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: PredicateError.forceCastFailure )
+        let sutNetworkClient = NetworkClient(session: session)
+        
+        // When
+        let error = await #expect(throws: RepositoryError.self) {
+            
+            try await sutNetworkClient.fetch(mockEndpoint)
+        }
+        
+        // Then
+        switch error! {
+        case .networkError(let errorMsg):
+            #expect(error?.description == "There was a network error: \(errorMsg.localizedDescription)")
+        default:
+            Issue.record("Should see a network error")
+        }
+        
+    }
+    
+    @Test func fetch_with_endpoint_response_success() async throws {
+        // Given
+        let data = mockDataString.data(using: .utf8)!
+        MockURLProtocol.requestHandler = { request in
+            
+            let response = HTTPURLResponse(
+                url: URL(string:"path")!,
+                statusCode: 201,
+                httpVersion: "",
+                headerFields: nil)!
+            
+            return (response, data)
+        }
+        
+        let mockEndpoint = MockEndpoint(path: "", method: .get, queryItems: [], urlRequest: mockURLRequest, error: nil)
+        let sutNetworkClient = NetworkClient(session: session)
+        
+        // When
+        let response = try await sutNetworkClient.fetch(mockEndpoint)
+        
+        // Then
+        #expect(response.count == 1)
+        #expect(response["key"] == "success")
+    }
 }
